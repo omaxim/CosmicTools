@@ -1,7 +1,6 @@
 import healpy as hp
 import numpy as np
-from scipy.ndimage import gaussian_filter
-
+#from scipy.ndimage import gaussian_filter
 
 """
 This code projects out and plots the portion of the CMB
@@ -60,7 +59,7 @@ def get_meshgrid(radius, N):
 
     return x,y
 
-def generate_CMB_cutout(cosmo,z_shift,N,meshgrid,map,NSIDE,sigma):
+def generate_CMB_cutout(cosmo,z_shift,N,meshgrid,map,NSIDE):
     """
     Find and cut out the CMB background around a galaxy of a given proper size
     :param cosmo:       astropy.cosmology object
@@ -82,33 +81,10 @@ def generate_CMB_cutout(cosmo,z_shift,N,meshgrid,map,NSIDE,sigma):
     #Rotate to align with a random direction
     randvec = random_three_vector()
     rotmat = rotation_matrix_from_vectors(equator,randvec)
-    rotated_vectors = hp.rotator.rotateVector(rotmat,vectors)
 
+    rotated_vectors = hp.rotator.rotateVector(rotmat,vectors)
     #Find the value at each pixel, reshape back to 2D and apply gaussian smoothing
     pixels = hp.vec2pix(NSIDE,rotated_vectors[0],rotated_vectors[1],rotated_vectors[2])
     values = map[pixels]
-    smoothed_cutout = gaussian_filter(values.reshape((N,N)),sigma=sigma)
 
-    return smoothed_cutout
-
-
-import matplotlib.pyplot as plt
-from astropy.cosmology import Planck18
-
-def main():
-    cosmo = Planck18
-    map = hp.read_map("COM_CMB_IQU-commander-field-Int_2048_R2.01_year-2.fits")
-    NSIDE = 2048
-    Nbins = 200
-    z_shift = 1
-    radius = 5
-    sigma = 11
-
-    x,y = get_meshgrid(radius, Nbins)
-    cutout = generate_CMB_cutout(cosmo,z_shift,Nbins,(x,y),map,NSIDE,sigma)
-
-    plt.pcolormesh(x,y,cutout)
-    plt.colorbar()
-    plt.show()
-
-main()
+    return values.reshape((N,N))
